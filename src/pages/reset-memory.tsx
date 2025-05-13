@@ -47,7 +47,7 @@ export default function ResetMemory() {
     try {
       setLoading(true)
       // Webhook do Kaisan para limpar memória
-      const response = await fetch('https://webhooks.botvance.com.br/webhook/d6ed9ab4-d771-46ca-valor-resetmem', {
+      const response = await fetch('https://webhooks.botvance.com.br/webhook/f1d1a201-6797-4160-8b19-kaisan-cleanmemory', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
