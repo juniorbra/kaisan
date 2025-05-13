@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   web:
-    image: hvidigaljr/grupovalor:latest
+    image: hvidigaljr/kaisan:latest
     networks:
       - portainer
     deploy:
@@ -13,12 +13,12 @@ services:
           - node.role == manager
       labels:
         - traefik.enable=true
-        - traefik.http.routers.valor.rule=Host(`valor.zobot.top`)
-        - traefik.http.routers.valor.entrypoints=websecure
-        - traefik.http.routers.valor.tls.certresolver=letsencryptresolver
-        - traefik.http.services.valor.loadbalancer.server.port=3000
-        - traefik.http.services.valor.loadbalancer.passHostHeader=true
-        - traefik.http.routers.valor.service=valor
+        - traefik.http.routers.kaisan.rule=Host(`kaisan.zobot.top`)
+        - traefik.http.routers.kaisan.entrypoints=websecure
+        - traefik.http.routers.kaisan.tls.certresolver=letsencryptresolver
+        - traefik.http.services.kaisan.loadbalancer.server.port=3000
+        - traefik.http.services.kaisan.loadbalancer.passHostHeader=true
+        - traefik.http.routers.kaisan.service=kaisan
     environment:
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
