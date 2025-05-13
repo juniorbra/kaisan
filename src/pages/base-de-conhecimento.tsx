@@ -21,6 +21,7 @@ export default function BaseDeConhecimento() {
   const [resposta, setResposta] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   
   const router = useRouter()
 
@@ -43,8 +44,34 @@ export default function BaseDeConhecimento() {
       }
     })
 
-    return () => subscription.unsubscribe()
-  }, [router])
+    // Adiciona o evento beforeunload
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    // Adiciona o evento de navegação
+    router.events.on('routeChangeStart', handleRouteChange)
+
+    return () => {
+      subscription.unsubscribe()
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      router.events.off('routeChangeStart', handleRouteChange)
+    }
+  }, [router, hasUnsavedChanges])
+
+  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+    if (hasUnsavedChanges) {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+  }
+
+  const handleRouteChange = (url: string) => {
+    if (hasUnsavedChanges) {
+      if (!window.confirm('Você tem alterações não salvas. Tem certeza que deseja sair?')) {
+        router.events.emit('routeChangeError')
+        throw 'routeChange aborted'
+      }
+    }
+  }
 
   const fetchEntries = async () => {
     try {
@@ -108,28 +135,8 @@ export default function BaseDeConhecimento() {
         
         setMessage({ text: 'Entrada adicionada com sucesso!', type: 'success' })
       }
-
-      // Webhook notification
-      try {
-        await fetch('https://webhooks.botvance.com.br/webhook/57d55548-411c-456d-a20f-kaisan-kbase', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            question: pergunta,
-            answer: resposta,
-            action: editingId ? 'update' : 'create',
-            entryId: editingId || 'new',
-            userId: session?.user.id
-          })
-        });
-        console.log('Webhook de notificação enviado com sucesso');
-      } catch (webhookError) {
-        console.error('Erro ao enviar webhook de notificação:', webhookError);
-        // Continue with the process even if webhook fails
-      }
       
+      setHasUnsavedChanges(true)
       // Reset form and refresh entries
       setPergunta('')
       setResposta('')
@@ -141,10 +148,40 @@ export default function BaseDeConhecimento() {
     }
   }
 
+  const handleSave = async () => {
+    try {
+      setLoading(true)
+      
+      // Webhook notification
+      await fetch('https://webhooks.botvance.com.br/webhook/57d55548-411c-456d-a20f-kaisan-kbase', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: pergunta,
+          answer: resposta,
+          action: editingId ? 'update' : 'create',
+          entryId: editingId || 'new',
+          userId: session?.user.id
+        })
+      });
+      
+      setMessage({ text: 'Dados salvos com sucesso!', type: 'success' })
+      setHasUnsavedChanges(false)
+    } catch (error: any) {
+      console.error('Erro ao enviar webhook de notificação:', error);
+      setMessage({ text: 'Erro ao salvar dados', type: 'error' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleEdit = (entry: KnowledgeEntry) => {
     setEditingId(entry.id)
     setPergunta(entry.question)
     setResposta(entry.answer)
+    setHasUnsavedChanges(true)
     window.scrollTo(0, 0)
   }
 
@@ -164,6 +201,7 @@ export default function BaseDeConhecimento() {
       if (error) throw error
       
       setMessage({ text: 'Entrada excluída com sucesso!', type: 'success' })
+      setHasUnsavedChanges(true)
       fetchEntries()
     } catch (error: any) {
       setMessage({ text: error.message, type: 'error' })
@@ -173,9 +211,15 @@ export default function BaseDeConhecimento() {
   }
 
   const handleCancel = () => {
+    if (hasUnsavedChanges) {
+      if (!window.confirm('Você tem alterações não salvas. Tem certeza que deseja cancelar?')) {
+        return
+      }
+    }
     setEditingId(null)
     setPergunta('')
     setResposta('')
+    setHasUnsavedChanges(false)
   }
 
   if (!session) {
@@ -236,6 +280,14 @@ export default function BaseDeConhecimento() {
                 type="submit"
                 disabled={loading}
                 className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {loading ? 'Adicionando...' : 'Adicionar'}
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={loading}
+                className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {loading ? 'Salvando...' : 'Salvar'}
               </button>
