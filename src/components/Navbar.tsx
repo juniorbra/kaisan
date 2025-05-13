@@ -20,7 +20,11 @@ export default function Navbar({ session }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex-shrink-0 flex items-center">
-            <span className="text-blue-600 font-bold text-xl">Kaisan</span>
+            <img
+              src="/images/logo-kaisan.png"
+              alt="Logo Kaisan"
+              className="h-8 w-auto"
+            />
           </div>
           <div className="hidden sm:flex sm:flex-1 sm:justify-center">
             <div className="flex space-x-8">

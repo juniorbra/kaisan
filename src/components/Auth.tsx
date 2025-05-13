@@ -65,7 +65,11 @@ export default function Auth() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <div className="w-full max-w-sm text-center mb-6">
-        <h1 className="text-3xl font-bold text-blue-600">Kaisan</h1>
+        <img
+          src="/images/logo-kaisan.png"
+          alt="Logo Kaisan"
+          className="mx-auto mb-6 h-12 w-auto"
+        />
         <p className="text-gray-600">Sistema de Configuração de Agente IA</p>
       </div>
       <div className="w-full max-w-sm">
